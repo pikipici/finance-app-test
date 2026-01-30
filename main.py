@@ -7,7 +7,15 @@ import os
 st.set_page_config(page_title="Finance App Test", page_icon="💵", layout="wide")
 
 def load_transactions(file):
-    pass 
+    try:
+        df = pd.read_csv(file)
+        df.columns = [col.strip() for col in df.columns] # Remove any leading/trailing spaces from column names
+        df["Amount"] = df["Amount"].str.replace(",", "").astype(float)
+        df["Date"] = pd.to_datetime(df["Date"], format="%d %b %Y") 
+        return df
+    except Exception as e:
+        st.error(f"Error loading file: {str(e)}")
+        return None 
 
 def main():
     st.title("Finance App Test")
@@ -16,6 +24,17 @@ def main():
     
     if uploaded_file is not None:
         df = load_transactions(uploaded_file)
+        
+        if df is not None:
+            debits_df = df[df["Debit/Credit"] == "Debit"].copy()
+            credits_df = df[df["Debit/Credit"] == "Credit"].copy()
+            
+            tab1, tab2 = st.tabs(["Expenses (Debits)", "Payments (Credits)"])
+            with tab1:
+                st.write(debits_df)
+            
+            with tab2:
+                st.write(credits_df)
         
 
 main()
