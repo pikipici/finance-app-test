@@ -56,7 +56,7 @@ def load_transactions(file):
 def add_keyword_to_category(category, keyword):
     keyword = keyword.strip()
     if keyword and keyword not in st.session_state.categories[category]:
-        st.session_state.categories[category].append[keyword]
+        st.session_state.categories[category].append(keyword)
         save_categories()
         return True
     
@@ -74,6 +74,8 @@ def main():
             debits_df = df[df["Debit/Credit"] == "Debit"].copy()
             credits_df = df[df["Debit/Credit"] == "Credit"].copy()
             
+            st.session_state.debits_df = debits_df.copy()
+            
             tab1, tab2 = st.tabs(["Expenses (Debits)", "Payments (Credits)"])
             with tab1:
                 new_category = st.text_input("Nama Kategori Baru")
@@ -85,7 +87,33 @@ def main():
                         save_categories()
                         st.rerun()  
                 
-                st.write(debits_df)
+                st.subheader("Pengeluaran Kamu")
+                edited_df = st.data_editor(
+                    st.session_state.debits_df[["Date", "Details", "Amount", "Category"]],
+                    column_config={
+                        "Date": st.column_config.DateColumn("Date", format="DD/MM/YYYY"),
+                        "Amount": st.column_config.NumberColumn("Amount", format="%.2f AED"),
+                        "Category": st.column_config.SelectboxColumn(
+                            "Category",
+                            options=list(st.session_state.categories.keys())
+                        )
+                    },
+                    hide_index=True,
+                    use_container_width=True,
+                    key="category_editor"
+                )
+                
+                save_button = st.button("Simpan", type="primary")
+                if save_button:
+                    for idx, row in edited_df.iterrows():
+                        new_category = row["Category"]
+                        if new_category == st.session_state.debits_df.at[idx, "Category"]:
+                            continue
+                        
+                        details = row["Details"]
+                        st.session_state.debits_df.at[idx, "Category"] =  new_category
+                        add_keyword_to_category(new_category, details)
+                        
             
             with tab2:
                 st.write(credits_df)
