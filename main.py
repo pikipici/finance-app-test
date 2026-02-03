@@ -140,7 +140,16 @@ def main():
                 st.subheader("Ringkasan Pembayaran")
                 total_payments = credits_df["Amount"].sum()
                 st.metric("Total Pembayaran", f"{total_payments: ,.2f} AED")
-                st.write(credits_df)
+                credit_df = st.data_editor(
+                    credits_df[["Date", "Details", "Amount"]],
+                    column_config={
+                        "Date": st.column_config.DateColumn("Date", format="DD/MM/YYYY"),
+                        "Amount": st.column_config.NumberColumn("Amount", format="%.2f AED"),
+                    },
+                    hide_index=True,
+                    use_container_width=True,
+                    key="category_editor_credits"
+                )
         
 
 main()
